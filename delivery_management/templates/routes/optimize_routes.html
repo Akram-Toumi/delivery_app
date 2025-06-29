@@ -1,27 +1,21 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}Optimize Delivery Routes{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col">
-            <h2>Optimize Delivery Routes</h2>
-        </div>
+<div class="card">
+    <div class="card-header">
+        <h5>Optimize Delivery Routes</h5>
     </div>
-
-    <div class="card">
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                {{ form|crispy }}
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-route"></i> Optimize Routes
-                </button>
-                <a href="{% url 'routes:list' %}" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-magic"></i> Optimize Routes
+            </button>
+            <a href="{% url 'routes:list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
     </div>
 </div>
 {% endblock %}

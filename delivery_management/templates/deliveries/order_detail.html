@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Order Details: {{ order.order_number }}</h5>
+                <span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'in_transit' %}primary{% elif order.status == 'pending' %}warning{% else %}danger{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Pickup Information</h6>
+                        <p>{{ order.pickup_address }}</p>
+                        <p><strong>Coordinates:</strong> {{ order.pickup_latitude }}, {{ order.pickup_longitude }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Delivery Information</h6>
+                        <p>{{ order.delivery_address }}</p>
+                        <p><strong>Coordinates:</strong> {{ order.delivery_latitude }}, {{ order.delivery_longitude }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Order Details</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Customer:</span>
+                                <span>{{ order.customer.company_name }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Weight:</span>
+                                <span>{{ order.weight_kg }} kg</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Priority:</span>
+                                <span>{{ order.get_priority_display }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Timing</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Requested Date:</span>
+                                <span>{{ order.requested_delivery_date }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Estimated Delivery:</span>
+                                <span>{{ order.estimated_delivery_time|default:"Not set" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Actual Delivery:</span>
+                                <span>{{ order.actual_delivery_time|default:"Not delivered" }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if order.special_instructions %}
+                <div class="mt-3">
+                    <h6>Special Instructions</h6>
+                    <p>{{ order.special_instructions }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Order Actions</h5>
+            </div>
+            
+            <div class="card-body">
+                {% if user.role in 'admin,manager' %}
+                <div class="d-grid gap-2">
+                    {% if order.status == 'pending' %}
+                    <a href="#" class="btn btn-success">Assign to Route</a>
+                    {% elif order.status == 'assigned' %}
+                    <a href="#" class="btn btn-primary">Mark as In Transit</a>
+                    {% elif order.status == 'in_transit' %}
+                    <a href="#" class="btn btn-success">Mark as Delivered</a>
+                    <a href="#" class="btn btn-danger">Mark as Failed</a>
+                    {% endif %}
+                    
+                    <a href="{% url 'deliveries:update' order.pk %}" class="btn btn-warning">Edit Order</a>
+                </div>
+                {% endif %}
+                
+                {% if order.status == 'pending' and user.role == 'customer' %}
+                <div class="d-grid gap-2">
+                    <a href="{% url 'deliveries:update' order.pk %}" class="btn btn-warning">Edit Order</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Route Information</h5>
+            </div>
+            
+            <div class="card-body">
+                {% if order.routestop_set.exists %}
+                {% with stop=order.routestop_set.first %}
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Route:</span>
+                        <span><a href="{% url 'routes:detail' stop.route.pk %}">{{ stop.route.name }}</a></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Stop #:</span>
+                        <span>{{ stop.stop_number }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Truck:</span>
+                        <span>{{ stop.route.truck.license_plate }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Driver:</span>
+                        <span>{{ stop.route.driver.get_full_name }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Estimated Arrival:</span>
+                        <span>{{ stop.estimated_arrival_time|default:"Not set" }}</span>
+                    </li>
+                </ul>
+                {% endwith %}
+                {% else %}
+                <p class="text-muted">This order has not been assigned to a route yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
