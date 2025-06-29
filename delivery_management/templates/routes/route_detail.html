@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Route Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    #route-map {
+        height: 500px;
+        width: 100%;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Route Details</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'routes:list' %}">Routes</a></li>
+                    <li class="breadcrumb-item active">Route {{ route.id }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Route Map</h5>
+                </div>
+                <div class="card-body">
+                    <div id="route-map"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Route Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Date:</strong> {{ route.date }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Truck:</strong> {{ route.truck.license_plate }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Driver:</strong> {{ route.driver.get_full_name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Status:</strong> 
+                        <span class="badge bg-{{ route.status }}">
+                            {{ route.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Distance:</strong> {{ route.total_distance_km|floatformat:2 }} km
+                    </div>
+                    <div class="mb-3">
+                        <strong>Estimated Duration:</strong> {{ route.estimated_duration_minutes }} min
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>Delivery Stops</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-numbered">
+                        {% for stop in route.stops.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Order #{{ stop.delivery_order.order_number }}</div>
+                                {{ stop.delivery_order.delivery_address|truncatechars:30 }}
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                {{ stop.delivery_order.weight_kg }} kg
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize map
+    const map = L.map('route-map').setView([{{ map_center.lat }}, {{ map_center.lng }}], 12);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Add factory marker
+    L.marker([{{ map_center.lat }}, {{ map_center.lng }}]).addTo(map)
+        .bindPopup("<b>Factory</b>");
+    
+    // Add route stops
+    {% for stop in route.stops.all %}
+    L.marker([{{ stop.delivery_order.delivery_latitude }}, {{ stop.delivery_order.delivery_longitude }}]).addTo(map)
+        .bindPopup("<b>Stop {{ stop.stop_number }}</b><br>Order #{{ stop.delivery_order.order_number }}");
+    {% endfor %}
+    
+    // Draw route line (simplified - in real app you'd use actual route coordinates)
+    const routeCoordinates = [
+        [{{ map_center.lat }}, {{ map_center.lng }}],
+        {% for stop in route.stops.all %}
+        [{{ stop.delivery_order.delivery_latitude }}, {{ stop.delivery_order.delivery_longitude }}],
+        {% endfor %}
+        [{{ map_center.lat }}, {{ map_center.lng }}]
+    ];
+    
+    L.polyline(routeCoordinates, {color: 'blue'}).addTo(map);
+</script>
+{% endblock %}

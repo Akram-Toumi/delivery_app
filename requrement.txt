@@ -1,0 +1,12 @@
+django-cors-headers
+pillow
+requests
+folium
+matplotlib
+numpy
+python-decouple
+django-crispy-forms
+crispy-bootstrap5
+django-allauth
+gdal==3.4.1
+geopandas

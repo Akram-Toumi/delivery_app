@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Delivery Routes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Delivery Routes</h2>
+        </div>
+        {% if user.role in 'admin,manager' %}
+        <div class="col-auto">
+            <a href="{% url 'routes:optimize' %}" class="btn btn-success">
+                <i class="fas fa-route"></i> Optimize Routes
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Route ID</th>
+                        <th>Date</th>
+                        <th>Truck</th>
+                        <th>Driver</th>
+                        <th>Stops</th>
+                        <th>Distance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in routes %}
+                    <tr>
+                        <td>{{ route.id }}</td>
+                        <td>{{ route.date }}</td>
+                        <td>{{ route.truck.license_plate }}</td>
+                        <td>{{ route.driver.get_full_name }}</td>
+                        <td>{{ route.stops.count }}</td>
+                        <td>{{ route.total_distance_km|floatformat:2 }} km</td>
+                        <td>
+                            <span class="badge bg-{{ route.status }}">
+                                {{ route.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'routes:detail' route.pk %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No routes found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
